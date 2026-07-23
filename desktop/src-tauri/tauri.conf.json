@@ -25,7 +25,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "nsis",
+      "deb",
+      "appimage"
+    ],
     "icon": [
       "icons/app-icon.png"
     ]
