@@ -1,22 +1,47 @@
-# Rust / Cargo
-/desktop/target/
-**/target/
-Cargo.lock # (opcional guardar se for biblioteca, mas para app pode manter no git)
-
-# Android / Gradle
-/android/.gradle/
-/android/build/
-/android/app/build/
-/android/local.properties
+# ==========================================
+# SISTEMA E EDITORES DE CÓDIGO
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
 .idea/
-*.iml
-*.ap_
-*.dex
-*.class
+*.swp
+*.tmp
 
-# Binários e pacotes finais (nunca sobem pro código fonte!)
+# ==========================================
+# NODE.JS & WEB (Lixo de instalações)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vercel
+dist/
+
+# ==========================================
+# RUST / TAURI (Compilados ultra pesados!)
+# ==========================================
+target/
+**/src-tauri/target/
+**/desktop/src-tauri/target/
+
+# ==========================================
+# ANDROID / GRADLE (Compilados mobile)
+# ==========================================
+.gradle/
+build/
+**/android/build/
+**/android/app/build/
+**/android/.gradle/
+local.properties
 *.apk
 *.aab
-*.exe
-*.deb
-*.AppImage
+*.keystore
+*.jks
+
+# ==========================================
+# SEGREEDOS E LOGS
+# ==========================================
+*.log
+.env
+.env.local

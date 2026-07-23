@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SNI Tester PRO</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* ===== Tema Tahoe escuro ===== */
+  :root { --bg1:#0F172A; --bg2:#1E1B4B; --bg3:#312E81; --fg:#ffffff;
+          --glass:rgba(255,255,255,.08); --glass2:rgba(255,255,255,.05); --border:rgba(255,255,255,.15); }
+  body { color: var(--fg); font-family: ui-sans-serif, system-ui, sans-serif; }
+
+  .glass      { background: var(--glass);  border: .5px solid var(--border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .glass-soft { background: var(--glass2); border: .5px solid var(--border); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+  /* ===== Orbs de luz (LightOrbs do Compose) ===== */
+  .orb { position: fixed; border-radius: 9999px; pointer-events: none; z-index: 0; }
+  .orb-1 { width: 450px; height: 450px; top: -80px; left: -60px;
+           background: radial-gradient(circle, rgba(49,46,129,.45), transparent 70%);
+           animation: orb1 12s ease-in-out infinite alternate; }
+  .orb-2 { width: 500px; height: 500px; bottom: -120px; right: -80px;
+           background: radial-gradient(circle, rgba(30,27,75,.35), transparent 70%);
+           animation: orb2 14s ease-in-out infinite alternate; }
+  @keyframes orb1 { from { transform: translate(-50px,-50px); } to { transform: translate(50px,150px); } }
+  @keyframes orb2 { from { transform: translate(60px,30px);  } to { transform: translate(-40px,-60px); } }
+
+  /* ===== Switch estilo Compose ===== */
+  .switch { width: 44px; height: 24px; border-radius: 9999px; background: rgba(128,128,128,.35);
+            position: relative; transition: background .2s; cursor: pointer; flex: none; }
+  .switch::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px;
+                   border-radius:9999px; background:#fff; transition: transform .2s; }
+  .switch.on { background: rgba(218,165,32,.4); }
+  .switch.on::after { transform: translateX(20px); background:#DAA520; }
+
+  .fade-in { animation: fade .25s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform:none; } }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.35); border-radius: 3px; }
+
+  input, textarea { outline: none; }
+  .search-field { position: relative; }
+  .search-field input { padding-left: 40px; }
+  .search-field .search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: #7dd3fc; font-size: 1rem;
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .drop-active { border-color:#38BDF8 !important; background:rgba(56,189,248,.14) !important; transform:scale(1.01); }
+
+  /* Dashboard organizado para a janela 800×600 e para o modo maximizado. */
+  html, body { width:100%; height:100%; overflow:hidden; }
+  .desktop-shell {
+    box-sizing:border-box; width:100% !important; max-width:1024px !important;
+    height:100%; min-height:0 !important; margin:0 auto !important; padding:12px !important;
+    display:grid !important; grid-template-columns:minmax(0, 1fr);
+    grid-template-rows:48px minmax(0, 1fr); gap:12px;
+  }
+  .desktop-shell > header { grid-column:1; grid-row:1; height:48px; margin:0 !important; }
+  .desktop-shell > main, .desktop-shell > section { grid-column:1; grid-row:2; min-height:0; overflow:auto; padding-bottom:0; }
+  #menuBtn { display:flex; }
+  #screen-main:not(.hidden) {
+    display:grid !important; grid-template-columns:220px minmax(0, 1fr);
+    grid-template-rows:30px minmax(235px, 1fr) 56px 42px; gap:10px; align-items:stretch;
+  }
+  #radarWrap { width:182px !important; height:182px !important; }
+  #screen-settings, #screen-results, #screen-logs, #screen-find-snis, #screen-about, #screen-credits { padding-right:4px; }
+  @media (min-width: 1050px) {
+    .desktop-shell { grid-template-columns:minmax(0, 1fr); padding:20px !important; gap:18px; }
+    #screen-main:not(.hidden) { grid-template-columns:280px minmax(0, 1fr); grid-template-rows:34px minmax(280px, 1fr) 68px 46px; gap:14px; }
+    #radarWrap { width:220px !important; height:220px !important; }
+  }
+  /* Menos ornamentos, mesma identidade Tahoe. */
+  .desktop-shell > header { padding:0 14px !important; }
+  #exportActions:not(.hidden) { display:flex; gap:6px; margin-left:auto; }
+  body {
+    background: radial-gradient(circle at top left, rgba(34,211,238,0.1), transparent 32%),
+                linear-gradient(135deg, #090d16 0%, #0f172a 45%, #111827 100%);
+    color: #f8fafc;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  #screen-main:not(.hidden) {
+    display:flex !important;
+    flex-direction:column;
+    gap:16px;
+    min-height:0;
+  }
+  #scanActionBtn {
+    min-width: 220px;
+    box-shadow: 0 10px 30px rgba(6,182,212,0.2);
+  }
+  #scanActionBtn.is-running {
+    border-color: rgba(251,113,133,0.35);
+    background: rgba(244,63,94,0.15);
+    color: #fecdd3;
+    box-shadow: 0 10px 30px rgba(244,63,94,0.16);
+  }
+  #terminalLog::-webkit-scrollbar { width: 6px; }
+  #terminalLog::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 999px; }
+  #radarWrap canvas { filter: drop-shadow(0 0 18px rgba(34,211,238,0.16)); }
+  #screen-settings input, #screen-results input {
+    font-family: inherit;
+  }
+  #screen-find-snis .find-snis-intro {
+    max-width:48rem;
+    margin:-.5rem 0 1.25rem;
+    text-align:left;
+  }
+  #sniListEl .glass-soft {
+    border-color: rgba(100,116,139,.3);
+    background: rgba(15,23,42,.35);
+  }
+  .fchip.active-filter {
+    background: rgba(34,211,238,.15) !important;
+    border-color: rgba(34,211,238,.4) !important;
+    color: #22d3ee !important;
+  }
+  /* Menu suspenso: entra da direita e volta para a direita ao fechar. */
+  #menuOverlay, #menuOverlay.hidden {
+    display:block !important; opacity:0; pointer-events:none; background:transparent !important;
+    transition:opacity .2s ease;
+  }
+  #menuOverlay:not(.hidden) { opacity:1; pointer-events:auto; background:rgba(0,0,0,.24) !important; }
+  #menuOverlay nav {
+    top:0; bottom:0; left:auto; right:0; width:230px; height:100%; border-radius:0 !important;
+    padding:68px 14px 16px !important;
+    opacity:0; transform:translateX(calc(100% + 20px));
+    transition:transform .24s ease, opacity .18s ease;
+  }
+  #menuOverlay:not(.hidden) nav { opacity:1; transform:translateX(0); }
+  .menu-close { position:absolute; top:16px; right:14px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:50%; font-size:18px; line-height:1; color:var(--fg); }
+  .menu-close:hover { color:#38BDF8; border-color:#38BDF8; background:rgba(56,189,248,.12); }
+  #menuBtn { position:relative; flex-direction:column; gap:5px; }
+  .menu-line { display:block; width:17px; height:2px; border-radius:99px; background:currentColor; transition:transform .22s ease; }
+  #menuBtn.is-open .menu-line:first-child { transform:translateY(3.5px) rotate(45deg); }
+  #menuBtn.is-open .menu-line:last-child { transform:translateY(-3.5px) rotate(-45deg); }
+  #menuOverlay .navItem { padding:10px 12px; border-radius:9px !important; }
+  .credit-link { color:#38BDF8; text-decoration:none; }
+  .credit-link:hover { text-decoration:underline; }
+  .social-link { display:inline-flex; width:34px; height:34px; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:50%; color:var(--fg); transition:background .15s, color .15s, border-color .15s; }
+  .social-link:hover { color:#38BDF8; border-color:#38BDF8; background:rgba(56,189,248,.12); }
+  .social-link svg { width:17px; height:17px; fill:currentColor; }
+  .coffee-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; color:#111827; background:#ffdd00; border-radius:999px; padding:9px 15px; font-size:12px; font-weight:800; transition:transform .15s, background .15s; }
+  .coffee-link:hover { background:#ffe536; transform:translateY(-1px); }
+  .coffee-link svg { width:19px; height:19px; fill:currentColor; }
+
+  /* Dashboard compacto: uma área de trabalho, sem rolagem da página. */
+  .desktop-shell > header { position:relative; z-index:60; }
+  .desktop-shell > main { overflow:hidden !important; }
+  #screen-main:not(.hidden) {
+    display:grid !important;
+    grid-template-columns:210px minmax(0, 1fr);
+    grid-template-rows:minmax(0, 1fr) 118px 28px;
+    gap:12px;
+    height:100%;
+  }
+  .dashboard-panel {
+    min-height:0;
+    border:1px solid rgba(100,116,139,.28);
+    border-radius:20px;
+    background:rgba(15,23,42,.62);
+  }
+  .dashboard-radar {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+  }
+  .dashboard-radar #radarWrap { width:154px !important; height:154px !important; }
+  .dashboard-control { display:flex; flex-direction:column; padding:22px; }
+  .dashboard-console { grid-column:1 / -1; display:flex; flex-direction:column; padding:12px 14px; }
+  .dashboard-console #terminalLog { height:auto; min-height:0; flex:1; padding:10px 12px; font-size:11px; }
+  .dashboard-tips {
+    grid-column:1 / -1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 12px;
+    border:1px solid rgba(56,189,248,.12);
+    border-radius:10px;
+    background:rgba(56,189,248,.045);
+    color:#94a3b8;
+    font-size:10px;
+    text-align:center;
+  }
+  .dashboard-stat { border-left:1px solid rgba(100,116,139,.32); padding-left:14px; }
+  .dashboard-stat:first-child { border-left:0; padding-left:0; }
+  #menuOverlay, #menuOverlay.hidden {
+    z-index:40;
+  }
+  #menuOverlay nav {
+    top:var(--menu-top, 72px);
+    right:var(--menu-right, 12px);
+    bottom:auto;
+    height:auto;
+    max-height:calc(100vh - 96px);
+    overflow-y:auto;
+    min-height:0;
+    padding:12px !important;
+    border-radius:18px !important;
+    box-shadow:0 18px 45px rgba(0,0,0,.32);
+  }
+  #menuOverlay .menu-close { display:none; }
+  .app-modal { background:rgba(2,6,23,.72); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  .tour-step { display:none; }
+  .tour-step.active { display:block; animation:fade .2s ease both; }
+  .tour-progress > span { height:4px; flex:1; border-radius:99px; background:rgba(148,163,184,.25); }
+  .tour-progress > span.active { background:#22d3ee; }
+  @media (min-width:1050px) {
+    #screen-main:not(.hidden) { grid-template-columns:245px minmax(0,1fr); grid-template-rows:minmax(0,1fr) 132px 30px; gap:14px; }
+    .dashboard-radar #radarWrap { width:190px !important; height:190px !important; }
+  }
+  /* Em telas compactas, o painel vira uma coluna rolável em vez de cortar conteúdo. */
+  @media (max-width: 720px) {
+    html, body { height:auto; min-height:100%; overflow:auto; }
+    .desktop-shell { min-height:100vh !important; height:auto !important; padding:8px !important; grid-template-rows:48px minmax(0, 1fr); gap:8px; }
+    .desktop-shell > header { padding:0 10px !important; }
+    .desktop-shell > main, .desktop-shell > section { overflow:visible !important; }
+    .desktop-shell > main { min-height:calc(100vh - 64px); }
+    #screen-main:not(.hidden) { display:flex !important; height:auto; min-height:0; gap:10px; }
+    .dashboard-panel { min-height:0; border-radius:16px; }
+    .dashboard-radar { min-height:220px; }
+    .dashboard-radar #radarWrap { width:140px !important; height:140px !important; }
+    .dashboard-control { min-height:330px; padding:16px; }
+    .dashboard-console { min-height:190px; }
+    .dashboard-console #terminalLog { min-height:120px; }
+    #scanActionBtn { min-width:0; flex:1; }
+    .dashboard-stat { padding-left:8px; }
+    #screen-settings, #screen-results, #screen-logs, #screen-find-snis, #screen-about, #screen-credits { padding:8px 2px 20px; }
+    #menuOverlay nav { right:8px; max-width:calc(100vw - 16px); }
+  }
+  @media (max-width: 380px) {
+    .desktop-shell > header p:last-child { display:none; }
+    .dashboard-control .grid-cols-4 { grid-template-columns:repeat(2, minmax(0, 1fr)); row-gap:10px; }
+  }
+</style>
+</head>
+<body class="min-h-screen overflow-x-hidden select-none">
+
+  <!-- Fundo Tahoe: gradiente profundo + orbs -->
+  <div class="fixed inset-0 -z-10" style="background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="desktop-shell relative z-10">
+    <!-- ===== TOP BAR TAHOE ===== -->
+    <header class="glass rounded-2xl mt-4 px-3 py-2 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl">
+          <img id="appIcon" class="h-full w-full object-contain" alt="SNI Tester PRO" />
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">SNI Tester PRO</p>
+          <p class="text-sm font-semibold text-white">Desktop</p>
+        </div>
+      </div>
+
+      <div class="flex items-center">
+        <button id="menuBtn" class="w-9 h-9 rounded-full flex items-center justify-center" title="Abrir menu" aria-label="Abrir menu">
+          <span class="menu-line"></span><span class="menu-line"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== TELA PRINCIPAL ===== -->
+    <main id="screen-main" class="fade-in">
+      <section class="dashboard-panel dashboard-radar">
+        <div class="mb-3 flex items-center gap-2 text-xs">
+          <span id="statusDot" class="h-2.5 w-2.5 rounded-full bg-slate-500"></span>
+          <span id="radarLabel" class="font-medium uppercase tracking-[0.2em] text-slate-400">Aguardando</span>
+        </div>
+        <div id="radarWrap" class="relative flex items-center justify-center rounded-full border border-slate-800/80 bg-slate-900/70 p-3">
+          <canvas id="radar" width="180" height="180" class="h-full w-full"></canvas>
+          <span class="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-semibold uppercase tracking-[0.3em] text-slate-500">LIVE</span>
+        </div>
+        <p id="operatorBadge" class="mt-3 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500">DESKTOP</p>
+      </section>
+
+      <section class="dashboard-panel dashboard-control">
+        <div class="flex items-center justify-between gap-4">
+          <button id="scanActionBtn" class="inline-flex items-center justify-center rounded-2xl border border-cyan-500/25 bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition-all duration-200 hover:bg-cyan-400">▶ START</button>
+          <span class="font-mono text-sm text-slate-400">⏱ <span id="elapsed" class="text-slate-200">00:00</span></span>
+        </div>
+        <div class="mt-7">
+          <div class="mb-2 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Progresso</span>
+            <span id="progressPct" class="font-semibold text-cyan-400">0%</span>
+          </div>
+          <div class="h-2 rounded-full bg-slate-800"><div id="progressBar" class="h-2 w-0 rounded-full bg-cyan-500 transition-all duration-300"></div></div>
+        </div>
+        <div class="mt-6 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3">
+          <p class="text-[10px] uppercase tracking-[0.22em] text-slate-500">Host atual</p>
+          <p id="curSni" class="mt-1 truncate font-mono text-sm text-white">AGUARDANDO...</p>
+          <p class="mt-1 text-xs text-slate-500">Porta <span id="curPort" class="text-slate-300">0</span></p>
+        </div>
+        <div class="mt-auto flex flex-wrap items-center justify-between gap-12 pt-5 text-xs">
+          <div class="dashboard-stat"><span class="text-slate-500">SNIs</span> <span id="metricLoaded" class="ml-1 font-semibold text-white">0</span></div>
+          <div class="dashboard-stat"><span class="text-slate-500">Testados</span> <span id="metricTested" class="ml-1 font-semibold text-white">0</span></div>
+          <div class="dashboard-stat"><span class="text-slate-500">Ativos</span> <span id="metricActive" class="ml-1 font-semibold text-emerald-400">0</span></div>
+          <div id="metricDeepWrap" class="dashboard-stat hidden"><span class="text-slate-500">Deep Scan</span> <span id="metricDeep" class="ml-1 font-semibold text-amber-400">0</span></div>
+          <div class="dashboard-stat"><span class="text-slate-500">Média</span> <span id="metricLatency" class="ml-1 font-semibold text-cyan-400">0ms</span></div>
+          <span id="okBadge" class="hidden">0</span><span id="vrBadge" class="hidden">0</span><span id="testedCount" class="hidden">0 / 0</span>
+        </div>
+      </section>
+
+      <section class="dashboard-panel dashboard-console">
+        <div class="mb-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span id="terminalStatusDot" class="h-2.5 w-2.5 rounded-full bg-slate-500"></span>
+            <h3 class="text-xs font-semibold text-slate-300">Console</h3>
+          </div>
+          <button id="clearConsoleBtn" class="text-xs text-slate-500 transition hover:text-cyan-400">Limpar</button>
+        </div>
+        <div id="terminalLog" class="overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/70 font-mono text-slate-300">
+          <div class="text-slate-500">&gt; Aguardando execução da varredura...</div>
+        </div>
+      </section>
+      <div class="dashboard-tips"><span class="mr-2 text-cyan-400/70">•</span><span id="tipText" class="truncate transition-opacity duration-300"></span></div>
+    </main>
+
+    <!-- ===== CONFIGURAÇÕES ===== -->
+    <section id="screen-settings" class="hidden flex-1 flex flex-col fade-in">
+      <div class="mb-6 flex items-center gap-3">
+        <button class="backBtn flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 text-lg transition hover:border-slate-700 hover:bg-slate-900/40">‹</button>
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Ajustes da aplicação</p>
+          <h1 class="text-xl font-semibold text-white">Configurações</h1>
+        </div>
+      </div>
+
+      <div class="flex-1 space-y-5 overflow-y-auto pr-2">
+        <div class="rounded-[24px] border border-slate-800 bg-slate-900/60 p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-white">Deep Scan (Anti-Spoofing)</p>
+              <p class="text-xs text-slate-400">Validação avançada contra falsos positivos</p>
+            </div>
+            <div id="deepSwitch" class="switch cursor-pointer"></div>
+          </div>
+          <div id="deepRow" class="hidden cursor-pointer"></div>
+        </div>
+
+        <div class="rounded-[24px] border border-slate-800 bg-slate-900/60 p-5">
+          <label class="mb-3 block text-sm font-semibold text-white">Operadora <span class="text-xs text-slate-400">(Rótulo)</span></label>
+          <input id="operatorInput" class="w-full rounded-xl border border-slate-800 bg-slate-950/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="Ex.: UNITEL" />
+        </div>
+
+        <div class="rounded-[24px] border border-slate-800 bg-slate-900/60 p-5">
+          <label class="mb-3 block text-sm font-semibold text-white">Portas <span class="text-xs text-slate-400">(para teste)</span></label>
+          <input id="portsInput" class="w-full rounded-xl border border-slate-800 bg-slate-950/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="443, 80, 8080" />
+          <p class="mt-2.5 text-[11px] text-slate-500">Separadas por vírgula. Range válido: 1–65535</p>
+        </div>
+
+        <div class="rounded-[24px] border border-slate-800 bg-slate-900/60 p-5">
+          <label class="mb-3 block text-sm font-semibold text-white">Concorrência <span class="text-xs text-slate-400">(Testes paralelos)</span></label>
+          <input id="concurrencyInput" class="w-full rounded-xl border border-slate-800 bg-slate-950/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="50" />
+          <p class="mt-2.5 text-[11px] text-slate-500">Número máximo de conexões simultâneas (50–200)</p>
+        </div>
+
+        <div class="rounded-[24px] border border-slate-800 bg-slate-900/60 p-5">
+          <p class="mb-4 text-sm font-semibold text-white">Lista de SNIs <span class="inline-block rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300"><span id="sniCount">0</span> carregados</span></p>
+          <div class="mb-3 search-field">
+            <span class="search-icon">🔍</span>
+            <input id="sniSearchInput" class="w-full rounded-xl border border-slate-800 bg-slate-950/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="Buscar SNI" />
+          </div>
+          <div class="mb-3 flex gap-2">
+            <input id="sniInput" class="flex-1 rounded-xl border border-slate-800 bg-slate-950/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="Adicionar: texto ou cole múltiplas linhas" />
+            <button id="addSniBtn" class="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-lg font-bold text-cyan-400 transition hover:border-cyan-500/50 hover:bg-cyan-500/25">＋</button>
+          </div>
+          <button id="importBtn" class="mb-3 w-full rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-700 hover:bg-slate-900/60">
+            📁 Selecionar arquivos
+          </button>
+          <div id="dropZone" class="mb-3 rounded-xl border-2 border-dashed border-slate-700 px-4 py-6 text-center transition hover:border-cyan-500/50 hover:bg-slate-950/50">
+            <p class="text-xs text-slate-400">Arraste aqui arquivos<br/><span class="text-slate-500">.txt, .csv, .json, .sni, .pdf, .docx, .xlsx</span></p>
+          </div>
+          <div id="sniListEl" class="max-h-48 space-y-2 overflow-y-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RESULTADOS ===== -->
+    <section id="screen-results" class="hidden flex-1 flex flex-col fade-in">
+      <div class="mb-6 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <button class="backBtn flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 text-lg transition hover:border-slate-700 hover:bg-slate-900/40">‹</button>
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Histórico de testes</p>
+            <h1 id="resultsTitle" class="text-xl font-semibold text-white">Resultados</h1>
+          </div>
+        </div>
+        <div id="exportActions" class="hidden flex gap-2">
+          <button id="exportTxtBtn" class="rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-700 hover:text-white" title="Exportar em TXT">TXT</button>
+          <button id="exportPdfBtn" class="rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-700 hover:text-white" title="Exportar em PDF">PDF</button>
+          <button id="exportJsonBtn" class="rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-700 hover:text-white" title="Exportar em JSON">JSON</button>
+        </div>
+      </div>
+
+      <div id="sessionList" class="flex-1 space-y-3 overflow-y-auto pr-2"></div>
+
+      <div id="sessionDetail" class="hidden flex-1 flex flex-col">
+        <div id="detailHeader" class="mb-4 rounded-[24px] border border-slate-800 bg-slate-900/60 p-5 text-sm text-white"></div>
+        <input id="searchInput" class="mb-4 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm text-white placeholder-slate-500 transition hover:border-slate-700 focus:border-cyan-500/50 focus:outline-none" placeholder="🔍 Buscar SNI..." />
+        <div class="mb-4 flex gap-2 overflow-x-auto pb-2">
+          <button data-f="" class="fchip flex-shrink-0 rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-700 hover:bg-slate-900 hover:text-white">TODOS</button>
+          <button data-f="200 OK" class="fchip flex-shrink-0 rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400">✓ 200 OK</button>
+          <button data-f="TIMEOUT" class="fchip flex-shrink-0 rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-400">⏱ TIMEOUT</button>
+          <button data-f="FAILED" class="fchip flex-shrink-0 rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-400">✕ FAILED</button>
+          <button data-f="DEEP" class="fchip flex-shrink-0 rounded-full border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-cyan-500/40 hover:bg-cyan-500/10 hover:text-cyan-300">◆ Deep Scan</button>
+        </div>
+        <div id="detailList" class="flex-1 space-y-2 overflow-y-auto"></div>
+      </div>
+    </section>
+
+    <!-- ===== LOGS ===== -->
+    <section id="screen-logs" class="hidden flex-1 fade-in">
+      <div class="flex items-center gap-2 mt-4 mb-4">
+        <button class="backBtn w-9 h-9 text-lg">‹</button>
+        <h1 class="text-xl font-black">Logs do Sistema</h1>
+      </div>
+      <div id="logList" class="glass-soft rounded-3xl p-4 flex-1 overflow-y-auto mono text-[11px] space-y-1">
+        <p class="opacity-30">Nenhum log registrado.</p>
+      </div>
+    </section>
+
+    <!-- ===== ENCONTRAR SNIs ===== -->
+    <section id="screen-find-snis" class="hidden flex-1 flex flex-col fade-in">
+      <div class="mb-6 flex items-center gap-3">
+        <button class="backBtn flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 text-lg transition hover:border-slate-700 hover:bg-slate-900/40">‹</button>
+        <div><p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Pesquisa externa</p><h1 class="text-xl font-semibold text-white">Encontrar SNIs</h1></div>
+      </div>
+      <p class="find-snis-intro text-sm leading-6 text-slate-400">Ferramentas públicas para pesquisar subdomínios, certificados e DNS. Abra uma delas e pesquise o domínio desejado.</p>
+      <div class="grid flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
+        <a href="https://crt.sh/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">crt.sh <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Certificados TLS públicos; pesquise por <span class="font-mono">%.dominio.com</span>.</p></a>
+        <a href="https://securitytrails.com/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">SecurityTrails <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Histórico DNS, hosts e descobertas de subdomínios.</p></a>
+        <a href="https://www.virustotal.com/gui/home/search" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">VirusTotal <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Pesquisa de domínios e relações observadas pela plataforma.</p></a>
+        <a href="https://rapiddns.io/subdomain" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">RapidDNS <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Consulta rápida de subdomínios e registros DNS públicos.</p></a>
+        <a href="https://dnsdumpster.com/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">DNSdumpster <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Mapeamento visual de DNS e hosts relacionados.</p></a>
+        <a href="https://subdomainfinder.c99.nl/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">Subdomain Finder <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Pesquisa pública de subdomínios em uma interface simples.</p></a>
+        <a href="https://api.certspotter.com/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">Cert Spotter <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Base de transparência de certificados para consultas avançadas.</p></a>
+        <a href="https://hackertarget.com/host-search/" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-cyan-500/50 hover:bg-slate-900"><p class="font-semibold text-white">HackerTarget <span class="float-right text-cyan-400">↗</span></p><p class="mt-1 text-xs leading-5 text-slate-400">Busca de hosts e dados DNS disponíveis publicamente.</p></a>
+      </div>
+      <p class="mt-4 text-[11px] text-slate-500">Use somente domínios que você possui ou tem autorização para pesquisar e testar.</p>
+    </section>
+
+    <!-- ===== SOBRE ===== -->
+    <section id="screen-about" class="hidden flex-1 fade-in">
+      <div class="flex items-center gap-2 mt-4 mb-4">
+        <button class="backBtn w-9 h-9 text-lg">‹</button>
+        <h1 class="text-xl font-black">Sobre</h1>
+      </div>
+      <div class="glass mx-auto w-full max-w-2xl rounded-3xl p-6 text-sm leading-7">
+        <p class="text-base font-semibold text-white">Análise prática de conectividade SNI.</p>
+        <div class="mt-4 space-y-4 text-slate-300">
+          <p>O <strong class="text-white">SNI Tester PRO</strong> ajuda a testar listas de hosts e portas de forma rápida, organizada e segura. A aplicação verifica a conexão TCP/TLS, mede a latência e guarda os resultados para consulta e exportação.</p>
+          <p>Para resultados que exigem mais confiança, o <strong class="text-cyan-400">Deep Scan</strong> acrescenta validações de conteúdo, túnel e fluxo de dados. Isso facilita distinguir uma conexão realmente funcional de respostas incompletas, redirecionamentos ou possíveis portais cativos.</p>
+          <p>Importe as suas listas, ajuste as portas e a concorrência, inicie a varredura e acompanhe tudo em tempo real no painel e no console.</p>
+        </div>
+        <p class="mt-6 border-t border-slate-700/60 pt-4 text-[11px] leading-5 text-slate-500">Versão 4.0.4 PRO · Desktop Edition</p>
+      </div>
+    </section>
+
+    <!-- ===== CRÉDITOS ===== -->
+    <section id="screen-credits" class="hidden flex-1 fade-in">
+      <div class="flex items-center gap-2 mt-4 mb-4">
+        <button class="backBtn w-9 h-9 text-lg">‹</button>
+        <h1 class="text-xl font-black">Créditos</h1>
+      </div>
+      <div class="glass mx-auto mt-6 w-full max-w-md rounded-3xl p-6 text-center space-y-4">
+        <p class="text-xs opacity-60">Desenvolvido com <span aria-label="coração branco">🤍</span> por:</p>
+        <a class="credit-link text-3xl font-black" href="https://devisaacson.site" target="_blank" rel="noopener noreferrer">devisaacson</a>
+        <a class="coffee-link mx-auto" href="https://buymeacoffee.com/devisaacson" target="_blank" rel="noopener noreferrer" title="Buy Me a Coffee" aria-label="Buy Me a Coffee">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12v10.2A5.8 5.8 0 0 1 11.2 19 5.8 5.8 0 0 1 5.4 13.2V5H3V3h2Zm14 3h-1v6h1a3 3 0 0 0 0-6Zm-8 15h8v-2H6v2h5Z"/></svg>
+          <span>Buy Me a Coffee</span>
+        </a>
+        <div class="pt-1 flex justify-center gap-3" aria-label="Redes sociais">
+          <a class="social-link" href="https://www.instagram.com/dev_isaacson" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm10 2c1.65 0 3 1.35 3 3v10c0 1.65-1.35 3-3 3H7c-1.65 0-3-1.35-3-3V7c0-1.65 1.35-3 3-3h10zm-5 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm5.25-2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5z"/></svg>
+          </a>
+          <a class="social-link" href="https://wa.me/244972783562" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" title="WhatsApp"><svg class="social-icon" viewBox="0 0 24 24"><path d="M20.52 3.48A11.93 11.93 0 0 0 12.04 0C5.46 0 .1 5.35.1 11.94c0 2.1.55 4.14 1.59 5.94L0 24l6.3-1.65a11.9 11.9 0 0 0 5.74 1.46h.01c6.58 0 11.94-5.35 11.94-11.94 0-3.19-1.24-6.18-3.47-8.39ZM12.04 21.8a9.88 9.88 0 0 1-5.04-1.38l-.36-.21-3.74.98 1-3.64-.24-.37a9.9 9.9 0 0 1-1.53-5.24c0-5.46 4.45-9.9 9.91-9.9 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.9 6.99c0 5.46-4.45 9.9-9.9 9.9h.01Zm5.43-7.42c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.47a8.95 8.95 0 0 1-1.65-2.05c-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.57-.48-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.05 1.02-1.05 2.5s1.08 2.9 1.23 3.1c.15.2 2.13 3.25 5.16 4.56.72.3 1.28.48 1.72.61.72.23 1.38.2 1.9.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.18-1.42-.07-.12-.27-.2-.57-.35Z"/></svg></a>
+          <a class="social-link" href="https://www.linkedin.com/in/isaacsontyimanda/" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.94v5.67H9.33V8.99h3.42v1.57h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.31 7.43A2.07 2.07 0 1 1 5.31 3.3a2.07 2.07 0 0 1 0 4.13zm1.78 13.02H3.53V8.99h3.56v11.46zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"/></svg>
+          </a>
+          <a class="social-link" href="https://github.com/isaacsontyimanda" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 8.36 22.91c.58.11.79-.25.79-.56v-2.02c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.97.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.71 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.17 1.18A11 11 0 0 1 12 6.1a11 11 0 0 1 2.89.39c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.8 1.19 1.83 1.19 3.09 0 4.44-2.7 5.41-5.28 5.7.41.36.78 1.08.78 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== MENU OVERLAY ===== -->
+  <div id="menuOverlay" class="hidden fixed inset-0 z-50 bg-black/40">
+    <nav class="absolute top-20 right-5 w-56 rounded-3xl p-3 space-y-2"
+         style="background:rgba(15,23,42,.95);border:.5px solid rgba(255,255,255,.2);backdrop-filter:blur(20px)">
+      <button id="menuCloseBtn" class="menu-close" title="Fechar menu" aria-label="Fechar menu">×</button>
+      <button data-nav="main"     class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">◉ <span>Dashboard</span></button>
+      <button data-nav="settings" class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">⚙ <span>Configurações</span></button>
+      <button data-nav="results"  class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">▤ <span>Resultados</span></button>
+      <button data-nav="find-snis" class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">⌕ <span>Encontrar SNIs</span></button>
+      <button data-nav="logs"     class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">≡ <span>Logs</span></button>
+      <button id="checkUpdateBtn" class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">↻ <span>Verificar atualização</span></button>
+      <button data-nav="about"    class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">ⓘ <span>Sobre</span></button>
+      <button data-nav="credits"  class="navItem glass-soft rounded-2xl w-full px-4 py-3 text-left text-sm font-semibold">☆ <span>Créditos</span></button>
+    </nav>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass rounded-full px-5 py-2 text-xs font-bold"
+       style="background:rgba(15,23,42,.9)"></div>
+
+  <div id="confirmModal" class="app-modal hidden fixed inset-0 z-[70] flex items-center justify-center p-5" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="w-full max-w-md rounded-[28px] border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+      <p class="text-sm uppercase tracking-[.24em] text-rose-400">Confirmar exclusão</p>
+      <h2 id="confirmMessage" class="mt-3 text-2xl font-bold text-white">Tem certeza?</h2>
+      <p class="mt-4 text-sm leading-6 text-slate-300">Esta ação não pode ser desfeita.</p>
+      <div class="mt-6 flex gap-3">
+        <button id="confirmNoBtn" class="flex-1 rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-slate-500 hover:text-white">Cancelar</button>
+        <button id="confirmYesBtn" class="flex-1 rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white hover:bg-rose-400">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
