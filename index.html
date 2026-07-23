@@ -226,10 +226,10 @@
               <i class="ph ph-linux-logo"></i>
             </div>
             <h3 class="text-xl font-bold text-white">Linux</h3>
-            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Pacote pré-compilado em <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.deb</code> para distribuições Linux.</p>
+            <p class="text-sm text-slate-400 mt-2 leading-relaxed">Pacotes pré-compilados em <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.deb</code> <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.appimage</code> para distribuições Linux.</p>
           </div>
           <a id="link-linux" href="https://github.com/isaacsontyimanda/SNI-Tester-PRO/releases/latest" target="_blank" class="mt-6 block w-full py-3 text-center bg-slate-800 hover:bg-cyan-400 hover:text-slate-950 text-cyan-300 font-bold text-sm rounded-xl transition">
-            Baixar para Linux (.deb)
+            Baixar para Linux (.deb, .appimage)
           </a>
         </div>
       </div>
@@ -333,22 +333,27 @@
             </div>
           </div>
 
-          <!-- Linux -->
+                    <!-- Linux -->
           <div id="tab-linux" class="tab-content space-y-3 hidden">
             <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-800">
               <span class="w-6 h-6 rounded-full bg-cyan-400/10 text-cyan-400 font-bold text-xs flex items-center justify-center shrink-0">1</span>
-              <p class="text-sm text-slate-300">Baixe o pacote <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.deb</code> para distribuições Debian/Ubuntu.</p>
+              <p class="text-sm text-slate-300">
+                Baixe o pacote <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.deb</code> (Debian/Ubuntu) ou o portátil <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.AppImage</code> (qualquer distro).
+              </p>
             </div>
             <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-800">
               <span class="w-6 h-6 rounded-full bg-cyan-400/10 text-cyan-400 font-bold text-xs flex items-center justify-center shrink-0">2</span>
-              <p class="text-sm text-slate-300">Instale com <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">sudo dpkg -i</code> ou pelo gerenciador de pacotes da sua distro.</p>
+              <p class="text-sm text-slate-300">
+                No <code class="text-cyan-300 bg-slate-800 px-1 py-0.5 rounded text-xs">.deb</code>, rode <code class="text-cyan-300 bg-slate-800 px-1 py-0.5 rounded text-xs">sudo dpkg -i</code>. No <code class="text-cyan-300 bg-slate-800 px-1 py-0.5 rounded text-xs">.AppImage</code>, dê permissão de execução (<code class="text-cyan-300 bg-slate-800 px-1 py-0.5 rounded text-xs">chmod +x</code>).
+              </p>
             </div>
             <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/50 border border-slate-800">
               <span class="w-6 h-6 rounded-full bg-cyan-400/10 text-cyan-400 font-bold text-xs flex items-center justify-center shrink-0">3</span>
-              <p class="text-sm text-slate-300">Abra o app pelo menu de aplicações após a instalação.</p>
+              <p class="text-sm text-slate-300">
+                Abra o app pelo menu de sistemas (instalado via .deb) ou dando duplo clique direto no arquivo <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded text-xs">.AppImage</code>.
+              </p>
             </div>
           </div>
-        </div>
 
         <div class="text-center mt-8 pt-6 border-t border-slate-800">
           <a href="https://github.com/isaacsontyimanda/SNI-Tester-PRO#readme" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold text-cyan-300 hover:text-cyan-200 transition">
