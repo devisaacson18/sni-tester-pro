@@ -24,8 +24,8 @@ let startTs = 0, timerId = null;
 let testedCount = 0;
 let selectedSession = null, statusFilter = null, searchQuery = '';
 const APP_VERSION = '4.0.4';
-const RELEASE_API = 'https://api.github.com/repos/isaacsontyimanda/SNI-Tester-PRO/releases/latest';
-const OFFICIAL_SITE = 'https://devisaacson.site';
+const RELEASE_API = 'https://api.github.com/repos/devisaacson18/sni-tester-pro/releases/latest';
+const OFFICIAL_SITE = 'https://github.com/devisaacson18/sni-tester-pro/releases';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -122,19 +122,16 @@ function updateMetrics() {
 async function openExternal(url) {
   if (!url) return;
   try {
-    // 1. Tenta abrir utilizando o Shell do Tauri se disponível
     if (window.__TAURI__?.shell?.open) {
       await window.__TAURI__.shell.open(url);
       return;
     }
-    // 2. Tenta abrir invocando comando Rust personalizado
     await invoke('open_external_url', { url });
     return;
   } catch (err) {
-    console.warn('Fall-back para navegação externa padrão:', err);
+    console.warn('Fallback para navegação externa padrão:', err);
   }
 
-  // 3. Fallback para navegador padrão em ambiente de desenvolvimento web
   const link = document.createElement('a');
   link.href = url;
   link.target = '_blank';
@@ -180,9 +177,11 @@ $('menuCloseBtn').onclick = () => setMenuOpen(false);
 $('menuOverlay').onclick = (e) => { if (e.target.id === 'menuOverlay') setMenuOpen(false); };
 document.querySelectorAll('.navItem').forEach((b) => (b.onclick = () => showScreen(b.dataset.nav)));
 
+// ---------- Lógica de Verificação de Atualização ----------
 function versionParts(version) {
   return String(version).replace(/^v/i, '').split(/[.+-]/).map((part) => Number.parseInt(part, 10) || 0);
 }
+
 function isNewerVersion(candidate, current) {
   const candidateParts = versionParts(candidate), currentParts = versionParts(current);
   const length = Math.max(candidateParts.length, currentParts.length);
@@ -191,30 +190,67 @@ function isNewerVersion(candidate, current) {
   }
   return false;
 }
-async function checkForUpdates() {
+
+async function checkForUpdates(isSilent = false) {
   const button = $('checkUpdateBtn');
-  button.disabled = true;
-  button.querySelector('span').textContent = 'Verificando…';
+
+  if (!isSilent && button) {
+    button.disabled = true;
+    const label = button.querySelector('span');
+    if (label) label.textContent = 'Verificando…';
+    else button.textContent = 'Verificando…';
+  }
+
   try {
-    const response = await fetch(RELEASE_API, { headers: { Accept: 'application/vnd.github+json' } });
-    if (!response.ok) throw new Error('release indisponível');
-    const release = await response.json();
-    const latest = release.tag_name || release.name;
-    if (latest && isNewerVersion(latest, APP_VERSION)) {
-      toast(`Nova versão ${latest} encontrada. Abrindo o site…`);
-      await openExternal(OFFICIAL_SITE);
-    } else {
-      toast('Você já está usando a versão mais recente.');
+    const response = await fetch(RELEASE_API, {
+      headers: {
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Status da requisição: ${response.status}`);
     }
-  } catch {
-    toast('Não foi possível verificar agora. Conecte-se à internet e tente de novo.');
+
+    const release = await response.json();
+
+    const rawLatest = release.tag_name || release.name || '';
+    const latestVersion = rawLatest.replace(/^v/i, '').trim();
+    const currentVersion = String(APP_VERSION || '').replace(/^v/i, '').trim();
+
+    if (latestVersion && isNewerVersion(latestVersion, currentVersion)) {
+      if (isSilent) {
+        toast(`🚀 Nova versão v${latestVersion} disponível!`);
+      } else {
+        toast(`Nova versão v${latestVersion} encontrada. Abrindo lançamentos…`);
+        await openExternal(OFFICIAL_SITE);
+      }
+    } else {
+      if (!isSilent) {
+        toast(`Você já está na versão mais recente (v${currentVersion}).`);
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao verificar atualizações:', err);
+
+    if (!isSilent) {
+      toast('Não foi possível verificar agora. Conecte-se à internet e tente de novo.');
+    }
   } finally {
-    button.disabled = false;
-    button.querySelector('span').textContent = 'Verificar atualização';
-    setMenuOpen(false);
+    if (!isSilent && button) {
+      button.disabled = false;
+      const label = button.querySelector('span');
+      if (label) label.textContent = 'Verificar atualização';
+      else button.textContent = 'Verificar atualização';
+      setMenuOpen(false);
+    }
   }
 }
-$('checkUpdateBtn').onclick = checkForUpdates;
+
+// Handler do Botão (Verificação Manual)
+if ($('checkUpdateBtn')) {
+  $('checkUpdateBtn').onclick = () => checkForUpdates(false);
+}
 
 // ---------- RADAR (Canvas) ----------
 const radar = $('radar');
@@ -729,28 +765,22 @@ renderTip();
       const iconUrl = await invoke('app_icon_data_url');
       if (iconUrl) appIcon.src = iconUrl;
     }
-  } catch { /* Fallback silencioso se o comando do ícone falhar */ }
+  } catch { /* Fallback silencioso */ }
+
   resizeRadar();
   requestAnimationFrame(drawRadar);
-  if ($('operatorBadge')) $('operatorBadge').textContent = operator;
-  $('operatorInput').value = operator === 'DESKTOP' ? '' : operator;
-  if ($('operatorSelect')) $('operatorSelect').value = operator;
-  $('portsInput').value = selectedPorts.join(', ');
-  if ($('portSelect')) $('portSelect').value = String(selectedPorts[0] || 443);
-  if ($('concurrencyInput')) $('concurrencyInput').value = selectedConcurrency;
-  if ($('concurrencyInput')) $('concurrencyInput').onchange = (e) => {
-    const v = parseInt(e.target.value, 10);
-    if (Number.isInteger(v) && v >= 50 && v <= 200) {
-      selectedConcurrency = v;
-      store.set('concurrency', selectedConcurrency);
-      toast('Concorrência atualizada: ' + selectedConcurrency);
-    } else {
-      toast('Valor inválido (50-200)');
-      e.target.value = selectedConcurrency;
-    }
-  };
-  $('deepSwitch').classList.toggle('on', deepScan);
+
   renderSniList();
   updateMetrics();
-  try { sessions = await invoke('load_sessions'); } catch { sessions = []; }
+
+  try { 
+    sessions = await invoke('load_sessions'); 
+  } catch { 
+    sessions = []; 
+  }
+
+  // 🔔 VERIFICAÇÃO AUTOMÁTICA DE ATUALIZAÇÃO (após 3 segundos de inicialização)
+  setTimeout(() => {
+    checkForUpdates(true);
+  }, 3000);
 })();
