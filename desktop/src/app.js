@@ -1,6 +1,4 @@
 // app.js — Integração Tauri (invoke/listen) + Radar Canvas + estado da UI
-// Substitui os listeners do TestService e os estados Compose.
-
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const dialog = window.__TAURI__.dialog;
@@ -18,7 +16,7 @@ let operator      = store.get('operator', 'DESKTOP');
 let selectedConcurrency = Math.min(200, Math.max(50, Number(store.get('concurrency', 50)) || 50));
 let lastUsedFolder = store.get('last_used_folder', '');
 
-// ---------- Estado vivo (campos companion object do TestService) ----------
+// ---------- Estado vivo ----------
 let sessions    = [];
 let liveResults = [];
 let running = false, deepScanning = false, stopRequested = false;
@@ -34,6 +32,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;'
 
 function toast(msg) {
   const t = $('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.remove('hidden');
   clearTimeout(t._h);
@@ -119,6 +118,41 @@ function updateMetrics() {
   if ($('metricLatency')) $('metricLatency').textContent = `${avgLatency}ms`;
 }
 
+// ---------- Abertura de links externos no navegador do SO ----------
+async function openExternal(url) {
+  if (!url) return;
+  try {
+    // 1. Tenta abrir utilizando o Shell do Tauri se disponível
+    if (window.__TAURI__?.shell?.open) {
+      await window.__TAURI__.shell.open(url);
+      return;
+    }
+    // 2. Tenta abrir invocando comando Rust personalizado
+    await invoke('open_external_url', { url });
+    return;
+  } catch (err) {
+    console.warn('Fall-back para navegação externa padrão:', err);
+  }
+
+  // 3. Fallback para navegador padrão em ambiente de desenvolvimento web
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+// Interceptador global para garantir que QUALQUER link externo abra no navegador
+document.addEventListener('click', (e) => {
+  const anchor = e.target.closest('a[href^="http://"], a[href^="https://"]');
+  if (anchor) {
+    e.preventDefault();
+    openExternal(anchor.href);
+  }
+});
+
 // ---------- Navegação (Screen enum → seções) ----------
 const screens = ['main', 'settings', 'results', 'logs', 'find-snis', 'about', 'credits'];
 function setMenuOpen(open) {
@@ -134,7 +168,7 @@ function setMenuOpen(open) {
   $('menuBtn').setAttribute('aria-label', $('menuBtn').title);
 }
 function showScreen(name) {
-  for (const s of screens) $('screen-' + s).classList.toggle('hidden', s !== name);
+  for (const s of screens) $('screen-' + s)?.classList.toggle('hidden', s !== name);
   if (name === 'results') renderSessions();
   setMenuOpen(false);
 }
@@ -156,21 +190,6 @@ function isNewerVersion(candidate, current) {
     if ((candidateParts[i] || 0) !== (currentParts[i] || 0)) return (candidateParts[i] || 0) > (currentParts[i] || 0);
   }
   return false;
-}
-async function openExternal(url) {
-  try {
-    await invoke('open_external_url', { url });
-    return;
-  } catch {
-    // Mantém o app utilizável no navegador durante desenvolvimento da interface.
-  }
-  const link = document.createElement('a');
-  link.href = url;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
 }
 async function checkForUpdates() {
   const button = $('checkUpdateBtn');
@@ -197,7 +216,7 @@ async function checkForUpdates() {
 }
 $('checkUpdateBtn').onclick = checkForUpdates;
 
-// ---------- RADAR (tradução do Canvas do Compose) ----------
+// ---------- RADAR (Canvas) ----------
 const radar = $('radar');
 const ctx = radar.getContext('2d');
 let targets = [];
@@ -214,17 +233,15 @@ function hexA(hex, a) {
 }
 function drawRadar(ts) {
   const size = 220, c = size / 2, r = c - 10;
-  const rotation = ((ts % 5000) / 5000) * 360;          // tween(5000, LinearEasing)
-  const color = deepScanning ? '#DAA520' : '#38BDF8';   // scanColor do Compose
+  const rotation = ((ts % 5000) / 5000) * 360;
+  const color = deepScanning ? '#DAA520' : '#38BDF8';
   ctx.clearRect(0, 0, size, size);
 
-  // 1. Fundo + círculos de grade
   ctx.fillStyle = 'rgba(255,255,255,0.05)';
   ctx.beginPath(); ctx.arc(c, c, r, 0, 7); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
   for (let i = 1; i <= 6; i++) { ctx.beginPath(); ctx.arc(c, c, (r * i) / 6, 0, 7); ctx.stroke(); }
 
-  // 2. Marcas de grau (30°)
   ctx.strokeStyle = 'rgba(255,255,255,0.2)';
   for (let a = 0; a < 360; a += 30) {
     const rad = (a * Math.PI) / 180;
@@ -235,7 +252,6 @@ function drawRadar(ts) {
   }
 
   if (running) {
-    // 3. Alvos aleatórios que brilham quando o sweep passa
     for (const [ang, dist] of targets) {
       const trad = (ang * Math.PI) / 180;
       const tx = c + r * dist * Math.cos(trad), ty = c + r * dist * Math.sin(trad);
@@ -248,7 +264,6 @@ function drawRadar(ts) {
         ctx.beginPath(); ctx.arc(tx, ty, 12, 0, 7); ctx.fill();
       }
     }
-    // 4. Sweep gradient (40 fatias com alpha crescente → ponta brilhante)
     for (let i = 0; i < 40; i++) {
       const a0 = ((rotation - 40 + i) * Math.PI) / 180;
       const a1 = ((rotation - 40 + i + 1.5) * Math.PI) / 180;
@@ -260,7 +275,6 @@ function drawRadar(ts) {
     ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(c + r * Math.cos(trad2), c + r * Math.sin(trad2)); ctx.stroke();
   }
 
-  // 5. Borda exterior
   ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(c, c, r, 0, 7); ctx.stroke();
 
@@ -270,13 +284,11 @@ function drawRadar(ts) {
 // ---------- START / STOP ----------
 async function toggleScan() {
   if (running) {
-    // Desativa a UI antes de aguardar o Rust. Assim, até eventos que estejam
-    // na fila no instante do clique não voltam a preencher o painel.
     stopRequested = true;
     setRunning(false);
     resetPanel();
     try {
-      await invoke('stop_scan');            // Intent action "STOP"
+      await invoke('stop_scan');
       appendTerminalLine('[sistema] Varredura interrompida pelo utilizador.');
     } catch (e) { toast(String(e)); }
     return;
@@ -288,7 +300,7 @@ async function toggleScan() {
   }
   try {
     stopRequested = false;
-    await invoke('start_scan', {            // startForegroundService(intent)
+    await invoke('start_scan', {
       snis: sniList, ports: selectedPorts, operator, deepScan,
       concurrency: selectedConcurrency,
     });
@@ -336,7 +348,7 @@ $('radarWrap').onclick = toggleScan;
 $('scanActionBtn').onclick = toggleScan;
 $('clearConsoleBtn').onclick = clearTerminal;
 
-// ---------- Eventos do backend Rust (listeners do TestService) ----------
+// ---------- Eventos do backend Rust ----------
 await listen('scan-started', () => {
   if (stopRequested) return;
   liveResults = [];
@@ -527,7 +539,6 @@ function joinPath(folder, name) {
   return `${folder}${folder.endsWith('/') || folder.endsWith('\\') ? '' : separator}${name}`;
 }
 
-// Importação nativa: diálogo do SO, atalho e drag & drop convergem no mesmo lote Rust.
 async function chooseFiles() {
   const path = await dialog.open({
     multiple: true,
@@ -551,7 +562,7 @@ dropZone.addEventListener('drop', async (e) => {
   if (paths.length) await importPaths(paths);
   else toast('Use o seletor de arquivos neste ambiente');
 });
-// API nativa do Tauri: fornece caminhos reais inclusive quando File.path não existe no WebView.
+
 try {
   const appWindow = window.__TAURI__.window.getCurrentWindow();
   await appWindow.onDragDropEvent(async (event) => {
@@ -560,7 +571,7 @@ try {
     if (payload.type === 'leave') dropZone.classList.remove('drop-active');
     if (payload.type === 'drop') { dropZone.classList.remove('drop-active'); await importPaths(payload.paths); }
   });
-} catch { /* fallback HTML5 acima */ }
+} catch { /* fallback HTML5 */ }
 
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
@@ -568,7 +579,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ---------- Resultados (sessões persistidas no Rust) ----------
+// ---------- Resultados ----------
 function renderSessions() {
   $('resultsTitle').textContent = selectedSession ? 'Detalhes da Sessão' : 'Resultados';
   $('exportActions').classList.toggle('hidden', !selectedSession);
@@ -689,11 +700,11 @@ async function exportSession(format) {
 [['exportTxtBtn', 'txt'], ['exportPdfBtn', 'pdf'], ['exportJsonBtn', 'json']]
   .forEach(([id, format]) => { $(id).onclick = () => exportSession(format); });
 
-// ---------- Dicas discretas ----------
+// ---------- Dicas ----------
 const tips = [
-  'Use Configuracoes para importar SNIs e ajustar portas.',
+  'Use Configurações para importar SNIs e ajustar portas.',
   'O Deep Scan ajuda a reduzir falsos positivos.',
-  'Resultados ficam disponiveis no historico apos a varredura.',
+  'Resultados ficam disponíveis no histórico após a varredura.',
   'Clique em um resultado ativo para copiar o SNI.',
 ];
 let tipIdx = Math.floor(Math.random() * tips.length);
@@ -714,8 +725,11 @@ renderTip();
 (async function init() {
   try {
     const appIcon = $('appIcon');
-    if (appIcon) appIcon.src = await invoke('app_icon_data_url');
-  } catch { /* o ícone do cabeçalho tem somente função visual */ }
+    if (appIcon) {
+      const iconUrl = await invoke('app_icon_data_url');
+      if (iconUrl) appIcon.src = iconUrl;
+    }
+  } catch { /* Fallback silencioso se o comando do ícone falhar */ }
   resizeRadar();
   requestAnimationFrame(drawRadar);
   if ($('operatorBadge')) $('operatorBadge').textContent = operator;
