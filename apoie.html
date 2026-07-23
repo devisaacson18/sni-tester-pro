@@ -75,8 +75,8 @@
         </div>
       </a>
 
-      <a href="index.html" class="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-cyan-300 transition px-3 py-2 rounded-xl border border-slate-700/60 bg-slate-900/50">
-        <i class="ph ph-arrow-left text-sm"></i>
+      <a href="index.html" class="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-cyan-300 transition px-3.5 py-2 rounded-xl border border-slate-700/60 bg-slate-900/50 hover:bg-slate-800">
+        <i class="ph ph-arrow-left text-base"></i>
         <span>Voltar ao Início</span>
       </a>
     </div>
@@ -86,8 +86,8 @@
   <main class="relative z-10 pt-32 pb-16 px-6 max-w-5xl mx-auto flex-1 flex flex-col justify-center items-center">
     
     <!-- Badge -->
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-300 text-xs font-semibold mb-6">
-      <i class="ph ph-heart text-sm text-pink-400"></i>
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-400/10 border border-pink-400/20 text-pink-300 text-xs font-semibold mb-6">
+      <i class="ph ph-heart-fill text-sm text-pink-400"></i>
       <span>Comunidade &amp; Sustentabilidade</span>
     </div>
 
@@ -123,14 +123,14 @@
           <div class="pt-2 space-y-3">
             <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300">
               <div class="w-7 h-7 rounded-xl bg-emerald-400/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-400/20 shadow-sm shadow-emerald-400/10">
-                <i class="ph ph-gift text-sm"></i>
+                <i class="ph ph-gift text-base"></i>
               </div>
               <span><strong>$200 de bônus</strong> imediato para novos usuários</span>
             </div>
 
             <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300">
               <div class="w-7 h-7 rounded-xl bg-pink-400/10 text-pink-400 flex items-center justify-center shrink-0 border border-pink-400/20 shadow-sm shadow-pink-400/10">
-                <i class="ph ph-hand-heart text-sm"></i>
+                <i class="ph ph-hand-heart text-base"></i>
               </div>
               <span>Ajuda a manter o <strong>SNI Tester PRO</strong> 100% gratuito</span>
             </div>
@@ -144,8 +144,14 @@
             
             <div>
               <div class="flex items-center justify-between mb-4">
-                <span class="text-2xl font-black text-blue-400">DigitalOcean</span>
-                <span class="px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 text-xs font-bold">$200 Bônus</span>
+                <div class="flex items-center gap-2">
+                  <i class="ph ph-cloud-bold text-2xl text-blue-400"></i>
+                  <span class="text-2xl font-black text-blue-400">DigitalOcean</span>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 text-xs font-bold flex items-center gap-1">
+                  <i class="ph ph-sparkle text-xs"></i>
+                  <span>$200 Bônus</span>
+                </span>
               </div>
               <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
                 Crie VPS Cloud para hospedar proxies, bots ou scripts de teste. Ganhe $200 em créditos válidos por 60 dias ao se cadastrar.
@@ -154,8 +160,10 @@
 
             <div class="mt-8 flex flex-col gap-3 items-center">
               <!-- Botão Principal -->
-              <a href="https://m.do.co/c/cd07679e63ca" target="_blank" rel="noopener sponsored" class="w-full py-3.5 text-center bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg shadow-cyan-400/10">
-                Ganhar $200 de Crédito
+              <a href="https://m.do.co/c/cd07679e63ca" target="_blank" rel="noopener sponsored" class="w-full py-3.5 flex items-center justify-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs sm:text-sm rounded-xl transition shadow-lg shadow-cyan-400/10 group">
+                <i class="ph ph-gift text-lg"></i>
+                <span>Ganhar $200 de Crédito</span>
+                <i class="ph ph-arrow-up-right text-xs group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
               </a>
 
               <!-- Badge Oficial -->
@@ -173,8 +181,8 @@
     <section class="w-full mt-16 text-left">
       <div class="mb-6">
         <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <i class="ph ph-coffee text-amber-400"></i>
-          Contribuição Direta
+          <i class="ph ph-coffee text-amber-400 text-2xl"></i>
+          <span>Contribuição Direta</span>
         </h2>
         <p class="text-xs sm:text-sm text-slate-400 mt-1">
           Caso queira incentivar o desenvolvedor diretamente com uma bebida ou contribuição pontual.
@@ -185,32 +193,44 @@
         <div class="glass rounded-3xl p-6 border border-slate-800 flex flex-col justify-between">
           <div>
             <div class="w-10 h-10 rounded-xl bg-amber-400/10 text-amber-400 flex items-center justify-center text-xl mb-3 border border-amber-400/20">
-              <i class="ph ph-coffee"></i>
+              <i class="ph ph-coffee text-xl"></i>
             </div>
-            <h3 class="text-base font-bold text-white">Buy Me a Coffee</h3>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>Buy Me a Coffee</span>
+            </h3>
             <p class="text-xs text-slate-400 mt-1 leading-relaxed">
               Contribuição rápida via Cartão de Crédito Internacional ou PayPal.
             </p>
           </div>
-          <a href="https://buymeacoffee.com/devisaacson" target="_blank" class="mt-6 block w-full py-3 text-center bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition">
-            Pagar um Café ☕
+          <a href="https://buymeacoffee.com/devisaacson" target="_blank" class="mt-6 w-full py-3 flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition">
+            <i class="ph ph-coffee text-base"></i>
+            <span>Pagar um Café</span>
+            <i class="ph ph-arrow-up-right text-xs"></i>
           </a>
         </div>
 
         <div class="glass rounded-3xl p-6 border border-slate-800 flex flex-col justify-between">
           <div>
             <div class="w-10 h-10 rounded-xl bg-cyan-400/10 text-cyan-400 flex items-center justify-center text-xl mb-3 border border-cyan-400/20">
-              <i class="ph ph-currency-btc"></i>
+              <i class="ph ph-currency-btc text-xl"></i>
             </div>
-            <h3 class="text-base font-bold text-white">Criptomoedas (USDT / BTC)</h3>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>Criptomoedas (USDT / BTC)</span>
+            </h3>
             <p class="text-xs text-slate-400 mt-1 leading-relaxed">
               Apoio descentralizado e direto via carteiras crypto.
             </p>
 
             <div class="mt-4 space-y-2">
-              <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                <span class="text-[11px] font-mono text-slate-300 truncate mr-2">USDT (TRC20): YOUR_TRC20_WALLET</span>
-                <button onclick="copyWallet('YOUR_TRC20_WALLET', 'usdt-btn')" id="usdt-btn" class="px-2.5 py-1 bg-slate-800 hover:bg-cyan-400 hover:text-slate-950 text-cyan-300 text-[10px] font-bold rounded-lg transition shrink-0">Copiar</button>
+              <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 truncate">
+                  <i class="ph ph-wallet text-cyan-400 text-sm shrink-0"></i>
+                  <span class="text-[11px] font-mono text-slate-300 truncate">USDT (TRC20): YOUR_TRC20_WALLET</span>
+                </div>
+                <button onclick="copyWallet('YOUR_TRC20_WALLET', 'usdt-btn')" id="usdt-btn" class="px-3 py-1.5 bg-slate-800 hover:bg-cyan-400 hover:text-slate-950 text-cyan-300 text-[10px] font-bold rounded-lg transition shrink-0 flex items-center gap-1.5">
+                  <i class="ph ph-copy text-xs"></i>
+                  <span id="usdt-btn-text">Copiar</span>
+                </button>
               </div>
             </div>
           </div>
@@ -218,19 +238,23 @@
       </div>
     </section>
 
-    <!-- Bloco 3: Apoie no GitHub -->
+        <!-- Bloco 3: Apoie no GitHub -->
     <section class="w-full mt-14">
       <div class="glass rounded-3xl p-6 sm:p-8 border border-slate-800 text-center flex flex-col items-center">
-        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-white flex items-center justify-center text-2xl mb-3 border border-slate-700">
-          <i class="ph ph-star"></i>
+        <!-- Ícone do topo do card (Corrigido para ph-fill ph-star) -->
+        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center text-2xl mb-3 border border-slate-700/80 shadow-inner">
+          <i class="ph-fill ph-star"></i>
         </div>
+        
         <h3 class="text-lg font-bold text-white">Deixe uma Estrela no GitHub</h3>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-md">
+        <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-md leading-relaxed">
           Não pode apoiar financeiramente? Sem problemas! Deixar uma estrela no repositório oficial ajuda imensamente na visibilidade do projeto.
         </p>
-        <a href="https://github.com/isaacsontyimanda/SNI-Tester-PRO" target="_blank" class="mt-5 inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs rounded-xl border border-cyan-400/30 transition">
-          <i class="ph ph-github-logo text-base"></i>
-          <span>Dar Star no Repository</span>
+        
+        <a href="https://github.com/devisaacson18/sni-tester-pro" target="_blank" class="mt-5 inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs rounded-xl border border-cyan-400/30 transition group">
+          <i class="ph ph-github-logo text-lg"></i>
+          <span>Dar Star no Repositório</span>
+          <i class="ph-fill ph-star text-sm group-hover:scale-125 text-amber-400 transition-transform"></i>
         </a>
       </div>
     </section>
@@ -247,7 +271,7 @@
     <div class="flex items-center justify-center gap-3 mb-4">
       <a class="social-btn" href="https://www.instagram.com/dev_isaacson" target="_blank" title="Instagram"><i class="ph ph-instagram-logo"></i></a>
       <a class="social-btn" href="https://www.linkedin.com/in/isaacsontyimanda/" target="_blank" title="LinkedIn"><i class="ph ph-linkedin-logo"></i></a>
-      <a class="social-btn" href="https://github.com/isaacsontyimanda" target="_blank" title="GitHub"><i class="ph ph-github-logo"></i></a>
+      <a class="social-btn" href="https://github.com/devisaacson18" target="_blank" title="GitHub"><i class="ph ph-github-logo"></i></a>
       <a class="social-btn" href="https://wa.me/244972783562" target="_blank" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
     </div>
     <p>© <span id="year"></span> SNI Tester PRO | Desenvolvido com <span class="text-[0.85rem]">🤍</span> por <a href="https://devisaacson.site" target="_blank" rel="noopener noreferrer" class="underline decoration-slate-500 decoration-1 underline-offset-2 text-slate-500">devisaacson</a></p>
@@ -261,12 +285,17 @@
     function copyWallet(address, btnId) {
       navigator.clipboard.writeText(address);
       const btn = document.getElementById(btnId);
-      const originalText = btn.textContent;
-      btn.textContent = 'Copiado!';
+      const btnText = document.getElementById(btnId + '-text') || btn;
+      const originalText = btnText.textContent;
+
+      btnText.textContent = 'Copiado!';
       btn.classList.add('bg-emerald-400', 'text-slate-950');
+      btn.classList.remove('bg-slate-800', 'text-cyan-300');
+
       setTimeout(() => {
-        btn.textContent = originalText;
+        btnText.textContent = originalText;
         btn.classList.remove('bg-emerald-400', 'text-slate-950');
+        btn.classList.add('bg-slate-800', 'text-cyan-300');
       }, 2000);
     }
 
